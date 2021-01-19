@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true"> <!-- default 1 minutes -->
+    <property name="projectName" value="batch"/>
+    <property name="logType" value="waslog"/>
+
+
+    <!-- application.properties  :  logstash.destination -->
+    <springProperty name="destination" source="logstash.destination" defaultValue="1.1.1.1"/>
+
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%X{X-B3-TraceId:-N/A}] [%X{X-B3-ParentSpanId:-N/A}] [%X{X-B3-SpanId:-N/A}] [%thread] %-5level %logger{36} - %msg %n
+            </Pattern>
+        </layout>
+    </appender>
+
+
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${destination}</destination>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <pattern>
+                    <pattern>
+                        {
+                        "trxTime" : "%X{trxTime:-}",        <!-- 처리 시간 -->
+                        "url" : "%X{url:-}",                <!-- URL -->
+                        "partnerId" : "%X{partnerId:-}",    <!-- 고객사 코드 -->
+                        "inParam" : "%X{inParam:-}",        <!-- 파라미터 -->
+                        "secuYn" : "%X{secuYn:-}",            <!-- SECU YN -->
+                        "loginId" : "%X{loginId:-}",        <!-- 로그인 아이디 -->
+                        "mberNo" : "%X{mberNo:-}",            <!-- 디바이스 아이디 -->
+                        "deviceId" : "%X{deviceId:-}",        <!-- 고객 번호 -->
+                        "date":"%date",
+                        "traceId": "%X{X-B3-TraceId:-}",
+                        "parentId": "%X{X-B3-ParentSpanId:-}",
+                        "spanId": "%X{X-B3-SpanId:-}",
+                        "level": "%level",
+                        "logType": "${logType}",
+                        "project": "${projectName}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{36}",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+
+    <logger name="com.spharos.conversion">
+        <appender-ref ref="stdout"/>
+        <!--        <appender-ref ref="logstash" />-->
+    </logger>
+
+    <root>
+        <appender-ref ref="stdout"/>
+        <!--        <appender-ref ref="logstash" />-->
+    </root>
+</configuration>
